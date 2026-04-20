@@ -1,0 +1,11 @@
+# Claude Code local settings
+.claude/
+
+# Original Claude Design handoff bundle — reference only, not deployed
+_source/
+_handoff/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
