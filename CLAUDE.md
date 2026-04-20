@@ -9,6 +9,9 @@
 | assets/    | Image assets (matt-coffy.webp) |
 | _source/, _handoff/ | Original Claude Design handoff — reference only, not deployed |
 
+## Working Agreement
+- **Only commit when I ask.** Don't create git commits, push, or open PRs on your own — even after a task "feels done." Wait for an explicit "commit" / "push" instruction.
+
 ## Design Tokens (editorial clinical — cool off-white + PE blue)
 
 ```
