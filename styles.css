@@ -16,20 +16,36 @@
 
   --accent: #1560bd;         /* patient-engines blue */
   --accent-ink: #ffffff;
-  --accent-2: #00b4d8;       /* bright cyan */
-  --accent-3: #0b1e3a;       /* navy */
+  --accent-2: #00b4d8;       /* bright cyan — reserved for dark-surface use + decorative underline */
   --danger:  #c53030;
+  /* Audit T8: --accent-3 removed (duplicated --ink-1). */
 
   --line: rgba(11,30,58,0.12);
   --line-strong: rgba(11,30,58,0.22);
 
-  --shadow-1: 0 1px 0 rgba(11,30,58,0.04);
+  /* Audit T10: --shadow-1 removed (was defined, never referenced).
+     --shadow-2 retained — used by .port-badge. */
   --shadow-2: 0 8px 32px -20px rgba(11,30,58,0.35);
 
+  /* Radius scale */
+  --r-xs: 8px;   /* Audit W3: added for badge icons + smaller pills. */
   --r-sm: 6px;
   --r-md: 12px;
   --r-lg: 20px;
   --r-xl: 28px;
+
+  /* Spacing scale (Audit C3) — 4pt-based, used for section rhythm.
+     Not a full migration of every padding/margin — component-level
+     micro-spacing stays raw where it represents optical adjustment. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-section: 110px;
 
   --maxw: 1280px;
   --gap: 24px;
@@ -64,6 +80,47 @@ ul { list-style: none; padding: 0; margin: 0; }
   font-size: 13px; z-index: 999;
 }
 .skip-link:focus { left: 16px; top: 16px; }
+
+/* Audit W2: visible keyboard focus on every interactive element.
+   :focus-visible only fires for keyboard/AT focus, so mouse clicks
+   don't draw the ring. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible,
+.btn:focus-visible,
+.faq-item:focus-visible,
+.handraiser-opt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.handraiser-opt:focus-visible,
+.handraiser-input:focus-visible {
+  outline-color: var(--accent-2);  /* brighter ring for dark-surface form */
+}
+
+/* Audit C2: honour prefers-reduced-motion. Kills the infinite
+   .port-badge-pulse animation and shortens every transition. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visually-hidden utility for screen-reader-only labels.
+   Used by the handraiser email input (audit B5) and available for any
+   future accessible-name fix that shouldn't print a visible label. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .container {
   max-width: var(--maxw);
@@ -217,15 +274,64 @@ ul { list-style: none; padding: 0; margin: 0; }
   display: flex; align-items: center; gap: 28px;
   font-size: 14px; color: var(--ink-2);
 }
-.nav-links a { display: inline-flex; align-items: center; gap: 4px; transition: color .15s; }
+.nav-links a {
+  /* Audit W1: explicit 12/4 padding so the hit area clears 44px
+     vertically even though the visible text is only ~14px tall.
+     Audit T7: aria-current="location" marks the in-view section with
+     an ink-1 color shift + a small dot, paired so the signal isn't
+     color-only. */
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 12px 4px;
+  transition: color .15s;
+}
+.nav-links a[aria-current="location"] { color: var(--ink-1); font-weight: 500; }
+.nav-links a[aria-current="location"]::after {
+  content: "";
+  width: 5px; height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  margin-left: 2px;
+}
 .nav-links a:hover { color: var(--ink-1); }
 .nav-cta {
   display: flex; align-items: center; gap: 12px;
 }
 .nav-cta .btn { padding: 10px 18px; font-size: 14px; }
+
+/* .nav-menu is layout-transparent on desktop (display: contents), so
+   its children — .nav-links and .nav-cta — render as direct flex
+   items of .nav-inner. At ≤980px the media query overrides this
+   wrapper into a positioned dropdown panel that holds both groups. */
+.nav-menu { display: contents; }
 .nav-divider {
   width: 1px; height: 20px; background: var(--line);
 }
+
+/* Audit C1: mobile hamburger. Hidden on desktop, revealed at ≤980px
+   where .nav-links would otherwise be invisible with no replacement. */
+.nav-toggle {
+  display: none;
+  width: 44px; height: 44px;  /* WCAG 2.5.5 touch target */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-1);
+  flex-shrink: 0;
+}
+.nav-toggle-line {
+  display: block;
+  width: 20px; height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform .2s ease, opacity .2s ease;
+}
+.nav.is-open .nav-toggle-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav.is-open .nav-toggle-line:nth-child(2) { opacity: 0; }
+.nav.is-open .nav-toggle-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ————————————————————————————————————————————————
    Hero
@@ -283,8 +389,9 @@ ul { list-style: none; padding: 0; margin: 0; }
 }
 .hero-meta-item .n em { font-style: italic; font-weight: 300; color: var(--accent); }
 .hero-meta-item .l {
+  /* Audit T3: margin-top 6px → 8px to sit on the 4pt grid. */
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--ink-3); margin-top: 6px;
+  text-transform: uppercase; color: var(--ink-3); margin-top: 8px;
 }
 
 /* Hero portrait */
@@ -336,7 +443,8 @@ ul { list-style: none; padding: 0; margin: 0; }
 .port-badge-bl { bottom: 120px; left: -8px; }
 .port-badge-row { display: flex; gap: 10px; align-items: center; }
 .port-badge-ico {
-  width: 30px; height: 30px; border-radius: 8px;
+  /* Audit W3: hardcoded 8px → var(--r-xs). */
+  width: 30px; height: 30px; border-radius: var(--r-xs);
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--bg-2); color: var(--ink-1);
   flex-shrink: 0;
@@ -347,7 +455,10 @@ ul { list-style: none; padding: 0; margin: 0; }
   color: var(--ink-1); letter-spacing: -0.02em;
 }
 .port-badge-lbl {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em;
+  /* Audit T1: raised from 9.5px (below readable-text floor) to 10.5px.
+     Still compact enough for the KPI badge layout while clearing the
+     sub-10 fringe and consolidating with other mono labels. */
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-3); margin-top: 4px;
 }
 .port-badge-chart { margin-top: 8px; }
@@ -428,7 +539,9 @@ section { padding: 110px 0; }
   margin-bottom: 10px;
 }
 .col-tag-old { background: var(--surface-2); color: var(--ink-2); }
-.col-tag-new { background: var(--accent-2); color: #fff; }
+/* Audit B2: cyan kept as brand-highlight bg, but text flipped to --ink-1
+   (5.97:1 ✅) so the pill clears 4.5:1 normal-text contrast. */
+.col-tag-new { background: var(--accent-2); color: var(--ink-1); }
 .col-sub {
   display: block;
   font-family: var(--serif);
@@ -454,7 +567,9 @@ section { padding: 110px 0; }
   margin-top: 2px;
 }
 .li-ico-old { background: var(--surface-3); color: var(--ink-2); }
-.li-ico-new { background: var(--accent-2); color: #fff; }
+/* Audit B3: same pattern as B2 — check-icon stroke flipped to --ink-1
+   so the 12px glyph meets the 3:1 UI-component threshold on cyan fill. */
+.li-ico-new { background: var(--accent-2); color: var(--ink-1); }
 
 .oldnew-divider {
   display: flex; align-items: center; justify-content: center;
@@ -734,7 +849,8 @@ section { padding: 110px 0; }
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-3); margin-top: 4px;
 }
-.testi-stars { display: flex; gap: 2px; color: var(--accent-2); margin-bottom: 12px; }
+/* Audit B1: stars moved off accent-2 (cyan on cream = 2.32:1) onto accent (5.83:1 ✅). */
+.testi-stars { display: flex; gap: 2px; color: var(--accent); margin-bottom: 12px; }
 
 /* ————————————————————————————————————————————————
    Founder block
@@ -926,7 +1042,8 @@ section { padding: 110px 0; }
   padding: 14px 18px;
   background: transparent;
   border: 1px solid rgba(244,239,230,0.15);
-  border-radius: 10px;
+  /* Audit W3: hardcoded 10px → var(--r-md). Snapped to the scale. */
+  border-radius: var(--r-md);
   color: var(--bg-1);
   font-size: 15px;
   text-align: left;
@@ -937,9 +1054,14 @@ section { padding: 110px 0; }
   background: rgba(244,239,230,0.04);
   border-color: rgba(244,239,230,0.3);
 }
+/* Audit B4: selected-state text flipped to --ink-1 on the cyan fill
+   (5.97:1 ✅ — was 2.32:1 with inherited cream text). Arrow bumped to
+   full opacity so the direction cue reads clearly against the fill. */
 .handraiser-opt.is-sel {
   background: var(--accent-2); border-color: var(--accent-2);
+  color: var(--ink-1);
 }
+.handraiser-opt.is-sel svg { opacity: 1; }
 .handraiser-opt svg { opacity: 0.5; }
 .handraiser-foot { margin-top: 20px; min-height: 16px; }
 .handraiser-back {
@@ -960,17 +1082,31 @@ section { padding: 110px 0; }
 }
 .handraiser-row { display: flex; gap: 8px; }
 .handraiser-input {
+  /* Audit W4: font-size raised from 14 → 16px to stop iOS Safari
+     zooming on focus. */
   flex: 1; min-width: 0;
-  padding: 14px 16px;
+  padding: 13px 16px;
   border-radius: 999px;
   border: 1px solid rgba(244,239,230,0.2);
   background: rgba(244,239,230,0.04);
   color: var(--bg-1);
-  font-family: var(--sans); font-size: 14px;
+  font-family: var(--sans); font-size: 16px;
   outline: none;
 }
 .handraiser-input::placeholder { color: rgba(244,239,230,0.4); }
 .handraiser-input:focus { border-color: var(--accent-2); }
+/* Audit W5: error-state hook for the handraiser email form. */
+.handraiser-input[aria-invalid="true"] { border-color: var(--danger); }
+.handraiser-error {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff9da0;  /* lightened --danger for dark-surface legibility — 5.4:1 on #24261e */
+}
+.handraiser-error[hidden] { display: none; }
 .handraiser-summary { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 20px; }
 .handraiser-chip {
   font-family: var(--mono); font-size: 10px;
@@ -999,8 +1135,21 @@ section { padding: 110px 0; }
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px;
 }
-.footer-cols a { display: block; font-size: 14px; color: var(--ink-2); padding: 4px 0; transition: color .15s; cursor: pointer; }
-.footer-cols a:hover { color: var(--ink-1); }
+.footer-cols a {
+  /* Audit W1: padding 4→10px to reach the 44px tap-target floor.
+     Audit T5: underline pairs with the color shift on hover so the
+     link affordance isn't signalled by color alone. */
+  display: block;
+  font-size: 14px;
+  color: var(--ink-2);
+  padding: 10px 0;
+  transition: color .15s ease, text-decoration-color .15s ease;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+.footer-cols a:hover { color: var(--ink-1); text-decoration-color: currentColor; }
 .footer-fine {
   padding-top: 20px;
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
@@ -1029,11 +1178,58 @@ section { padding: 110px 0; }
   .prob-grid, .how-grid, .results-grid, .fit-grid, .footer-cols, .logobar-row, .testi-grid { grid-template-columns: 1fr 1fr; }
   .svc-row { grid-template-columns: 60px 1fr; gap: 24px; }
   .svc-list { grid-column: 2; }
-  .nav-links { display: none; }
-  .nav-inner { height: 72px; }
+  .nav-inner { height: 72px; position: relative; }
   .nav-brand img { height: 44px; }
   .lede-right { text-align: left; margin-left: 0; }
   section { padding: 72px 0; }
+
+  /* Audit C1: hamburger replaces the hidden desktop nav-links. */
+  .nav-toggle { display: inline-flex; }
+
+  /* Mobile: .nav-menu becomes the actual dropdown panel (switches
+     from `display: contents` to `display: none`/`flex`). Both .nav-links
+     and .nav-cta live inside it as stacked groups. */
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 24px 20px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-2);
+  }
+  .nav.is-open .nav-menu { display: flex; }
+
+  /* Links stack with dividers between. */
+  .nav-menu .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .nav-menu .nav-links a {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 16px;
+  }
+  .nav-menu .nav-links a:last-child { border-bottom: none; }
+
+  /* CTA group stacks below the links with stretched, full-width
+     buttons. Both quiz + Apply are visible here regardless of the
+     narrower-desktop hide rule. */
+  .nav-menu .nav-cta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .nav-menu .nav-cta .btn {
+    display: inline-flex;  /* re-enable — overrides ≤1140 ghost hide */
+    justify-content: center;
+    padding: 14px 22px;
+    font-size: 15px;
+  }
 
   /* Keep hero portrait from stretching awkwardly when it goes full-width */
   .portrait-wrap { max-width: 520px; margin: 0 auto; }
@@ -1051,8 +1247,8 @@ section { padding: 110px 0; }
   .hero { padding: 32px 0 24px; }
   .nav-inner { height: 64px; gap: 12px; }
   .nav-brand img { height: 36px; }
-  .nav-cta .btn:not(.btn-primary) { display: none; }
-  .nav-cta .btn { padding: 9px 14px; font-size: 13px; }
+  /* Legacy .nav-cta hide/compact rules removed — at ≤640 the whole
+     .nav-cta lives inside the hamburger panel, so these no longer apply. */
   .hero-kicker { white-space: normal; line-height: 1.4; padding: 6px 12px; }
   .hero-ctas .btn { padding: 12px 18px; font-size: 14px; }
   .section-head, .section-head-row { margin-bottom: 40px; }
